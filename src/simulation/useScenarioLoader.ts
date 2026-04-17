@@ -5,7 +5,7 @@ import type { DialogueOption, Scenario } from "./types";
 interface DialogueNodeRow {
   node_id: string;
   client_text: string;
-  options_payload_json: DialogueOption[];
+  options_payload_json: unknown;
 }
 
 interface ScenarioRow {
@@ -75,7 +75,7 @@ export function useScenarioLoader(scenarioId: string): UseScenarioResult {
         nodes[row.node_id] = {
           node_id: row.node_id,
           client_text: row.client_text,
-          options_payload_json: row.options_payload_json,
+          options_payload_json: row.options_payload_json as DialogueOption[],
         };
       }
 
