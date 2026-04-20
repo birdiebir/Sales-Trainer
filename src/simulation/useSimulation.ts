@@ -212,6 +212,7 @@ export function useSimulation(scenario: Scenario) {
           id: `m-${scenario.starting_node_id}-${Date.now()}`,
           side: "client",
           text: scenario.nodes[scenario.starting_node_id].client_text,
+          timestamp: Date.now(),
         },
       ],
       path: [],
