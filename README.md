@@ -34,17 +34,6 @@ Located at the top of the screen, the Trust Bar provides real-time feedback on t
 
 ---
 
-## The Logic Behind the Trainer
-While the interface is streamlined for the user, the engine driving the experience is highly sophisticated.
-
-### Directed Graph Dialogue Engine
-The project manages the complexity of non-linear conversations by treating the dialogue as a directed graph.
-* **JSONB Integration:** Each dialogue node stores its routing logic and sentiment deltas within a JSONB column, allowing for 0-to-1 scalability.
-* **Telemetry Tracking:** The system logs decision-making speed and specific paths taken. This data is essential for identifying where agents hesitate or struggle with compliance.
-* **Scalable Architecture:** The database is designed to support hundreds of scenarios and varying response counts without requiring modifications to the core codebase.
-
----
-
 ## Tech Stack
 * **Frontend:** React and Tailwind CSS (Optimised for a mobile-first, professional experience).
 * **Backend and Data:** PostgreSQL with JSONB support for graph-based logic traversal.
