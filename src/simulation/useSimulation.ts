@@ -14,6 +14,20 @@ export interface ChatMessage {
   id: string;
   side: "client" | "agent";
   text: string;
+  /** Absolute epoch ms — monotonically increasing across the conversation. */
+  timestamp: number;
+}
+
+/**
+ * Produces a realistic conversational delay in ms (30s–3min) so timestamps
+ * always march forward without looking mechanical.
+ */
+function nextTimestamp(prev: number, side: "client" | "agent"): number {
+  // Agents type faster than the client reflects; keep delay natural.
+  const minMs = side === "agent" ? 20_000 : 45_000;   // 20s / 45s
+  const maxMs = side === "agent" ? 90_000 : 180_000;  // 1.5m / 3m
+  const delay = Math.floor(minMs + Math.random() * (maxMs - minMs));
+  return prev + delay;
 }
 
 interface SimulationState {
@@ -28,22 +42,26 @@ interface SimulationState {
 }
 
 export function useSimulation(scenario: Scenario) {
-  const [state, setState] = useState<SimulationState>(() => ({
-    trustScore: STARTING_TRUST,
-    currentNodeId: scenario.starting_node_id,
-    turnsTaken: 0,
-    messages: [
-      {
-        id: `m-${scenario.starting_node_id}`,
-        side: "client",
-        text: scenario.nodes[scenario.starting_node_id].client_text,
-      },
-    ],
-    path: [],
-    status: "running",
-    result: null,
-    secondsLeft: TURN_SECONDS,
-  }));
+  const [state, setState] = useState<SimulationState>(() => {
+    const startTs = Date.now();
+    return {
+      trustScore: STARTING_TRUST,
+      currentNodeId: scenario.starting_node_id,
+      turnsTaken: 0,
+      messages: [
+        {
+          id: `m-${scenario.starting_node_id}`,
+          side: "client",
+          text: scenario.nodes[scenario.starting_node_id].client_text,
+          timestamp: startTs,
+        },
+      ],
+      path: [],
+      status: "running",
+      result: null,
+      secondsLeft: TURN_SECONDS,
+    };
+  });
 
   const turnStartRef = useRef<number>(Date.now());
   const tickRef = useRef<number | null>(null);
@@ -111,10 +129,13 @@ export function useSimulation(scenario: Scenario) {
           time_to_decide_ms: timeToDecide,
         };
 
+        const lastTs = s.messages[s.messages.length - 1]?.timestamp ?? Date.now();
+        const agentTs = nextTimestamp(lastTs, "agent");
         const agentMessage: ChatMessage = {
           id: `m-agent-${nextTurns}`,
           side: "agent",
           text: option.text,
+          timestamp: agentTs,
         };
 
         // End conditions in priority order
@@ -165,6 +186,7 @@ export function useSimulation(scenario: Scenario) {
           id: `m-client-${nextId}-${nextTurns}`,
           side: "client",
           text: nextNode.client_text,
+          timestamp: nextTimestamp(agentTs, "client"),
         };
 
         return {
@@ -190,6 +212,7 @@ export function useSimulation(scenario: Scenario) {
           id: `m-${scenario.starting_node_id}-${Date.now()}`,
           side: "client",
           text: scenario.nodes[scenario.starting_node_id].client_text,
+          timestamp: Date.now(),
         },
       ],
       path: [],
